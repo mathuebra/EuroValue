@@ -1,44 +1,46 @@
-name: Euro Value Bot
+name: Atualizar Cotação do Euro
 
 on:
   schedule:
-    - cron: "*/10 * * * *"  # Roda a cada 10 minutos
-  workflow_dispatch:  # Permite rodar manualmente
+    - cron: "*/10 * * * *"  # Executa a cada 10 minutos
+  workflow_dispatch:  # Permite execução manual
 
 jobs:
-  run_bot:
+  update-currency:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositório
+      - name: Checkout do repositório
         uses: actions/checkout@v4
 
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-
-      - name: Restaurar Cache da Última Cotação
-        uses: actions/cache@v4
-        with:
-          path: EuroValue/ultimo_valor.txt
-          key: euro-cotacao-${{ github.run_id }}
-          restore-keys: euro-cotacao-
+          python-version: '3.x'
 
       - name: Instalar dependências
-        run: pip install requests
+        run: pip3 install requests
 
-      - name: Criar arquivo de cache, se necessário
-        run: |
-          if [ ! -f "EuroValue/ultimo_valor.txt" ]; then
-            echo "0.00" > EuroValue/ultimo_valor.txt
-          fi
-
-      - name: Executar EuroValue Bot
+      - name: Executar script de cotação
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python EuroValue.py
+        run: python3 EuroValue.py
 
-      - name: Debug Files (ver arquivos gerados)
-        run: ls -R EuroValue
+      - name: Configurar Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Verificar mudanças
+        run: |
+          if git diff --quiet; then
+            echo "Sem alterações, nada para commit."
+            exit 0
+          fi
+
+      - name: Commit e Push
+        run: |
+          git add VALUE.txt
+          git commit -m "Atualização do valor do Euro"
+          git push
