@@ -1,43 +1,46 @@
-import os
 import requests
+import time
+import os
 
+# Token e Chat ID do Telegram
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-COTACAO_FILE = "ultimo_valor.txt"
 
+# Função para enviar mensagem pelo bot
 def enviar_mensagem(mensagem):
-    """Envia uma mensagem para o Telegram"""
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": mensagem}
     requests.post(url, json=payload)
 
+# Função para obter a cotação do Euro
 def obter_cotacao():
-    """Obtém a cotação atual do Euro em relação ao Real"""
     url = "https://economia.awesomeapi.com.br/json/last/EUR-BRL"
     resposta = requests.get(url).json()
-    return round(float(resposta["EURBRL"]["bid"]), 2)  # Arredonda para 2 casas decimais
+    return round(float(resposta["EURBRL"]["bid"]), 2)  # Mantém 2 casas decimais
 
-# Tenta ler o último valor salvo
-if os.path.exists(COTACAO_FILE):
-    with open(COTACAO_FILE, "r") as f:
-        try:
-            ultimo_valor = float(f.read().strip())
-        except ValueError:
-            ultimo_valor = None
-else:
-    ultimo_valor = None
+# Caminho do arquivo de cache
+cache_path = "EuroValue/ultimo_valor.txt"
+
+# Verifica se o arquivo existe, senão cria com valor padrão
+if not os.path.exists(cache_path):
+    with open(cache_path, "w") as f:
+        f.write("0.00")
+
+# Lê o último valor do cache
+with open(cache_path, "r") as f:
+    ultimo_valor = float(f.read().strip())
 
 # Obtém a nova cotação
 cotacao = obter_cotacao()
 
-if ultimo_valor is not None:
-    if cotacao > ultimo_valor:
-        enviar_mensagem(f"🔺 Euro subiu para R$ {cotacao:.2f}")
-    elif cotacao < ultimo_valor:
-        enviar_mensagem(f"🔻 Euro caiu para R$ {cotacao:.2f}")
-    else:
-        enviar_mensagem(f"🔹 Euro está estável em R$ {cotacao:.2f}")
+# Compara e envia mensagem, se necessário
+if cotacao > ultimo_valor:
+    enviar_mensagem(f"🔺 Euro subiu para R$ {cotacao:.2f}")
+elif cotacao < ultimo_valor:
+    enviar_mensagem(f"🔻 Euro caiu para R$ {cotacao:.2f}")
+else:
+    enviar_mensagem(f"🔹 Euro está estável em R$ {cotacao:.2f}")
 
-# Salva a nova cotação no arquivo
-with open(COTACAO_FILE, "w") as f:
+# Salva a nova cotação no cache
+with open(cache_path, "w") as f:
     f.write(str(cotacao))

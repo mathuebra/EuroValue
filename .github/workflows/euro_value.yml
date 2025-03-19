@@ -18,8 +18,21 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Restaurar Cache da Última Cotação
+        uses: actions/cache@v4
+        with:
+          path: EuroValue/ultimo_valor.txt
+          key: euro-cotacao-${{ github.run_id }}
+          restore-keys: euro-cotacao-
+
       - name: Instalar dependências
         run: pip install requests
+
+      - name: Criar arquivo de cache, se necessário
+        run: |
+          if [ ! -f "EuroValue/ultimo_valor.txt" ]; then
+            echo "0.00" > EuroValue/ultimo_valor.txt
+          fi
 
       - name: Executar EuroValue Bot
         env:
@@ -27,10 +40,5 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python EuroValue.py
 
-      - name: Cache da última cotação
-        uses: actions/cache@v4
-        with:
-          path: EuroValue/ultimo_valor.txt
-          key: euro-cotacao-${{ github.run_id }}
-          restore-keys: euro-cotacao-
-
+      - name: Debug Files (ver arquivos gerados)
+        run: ls -R EuroValue
