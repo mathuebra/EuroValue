@@ -9,7 +9,7 @@ CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 def enviar_mensagem(mensagem):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": mensagem}
-    requests.post(url, json=payload) 
+    requests.post(url, json=payload)
 
 def obter_cotacao():
     url = "https://economia.awesomeapi.com.br/json/last/EUR-BRL"
