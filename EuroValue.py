@@ -19,7 +19,7 @@ def obter_cotacao():
     return round(float(resposta["EURBRL"]["bid"]), 2)  # Mantém 2 casas decimais
 
 # Caminho do arquivo de cache
-cache_path = "EuroValue/ultimo_valor.txt"
+cache_path = "ultimo_valor.txt"
 
 # Verifica se o arquivo existe, senão cria com valor padrão
 if not os.path.exists(cache_path):
