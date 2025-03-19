@@ -1,35 +1,43 @@
+import os
 import requests
-import time
-from datetime import datetime
 
-TOKEN = "8133639212:AAGEvGAvkiHsEk4jpjsWQSuYIMF2IweTr1s"
-CHAT_ID = "1352048677"
+TOKEN = os.getenv("TELEGRAM_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+COTACAO_FILE = "ultimo_valor.txt"
 
 def enviar_mensagem(mensagem):
-    agora = datetime.now().strftime("%H:%M:%S")
-    mensagem = f"{mensagem}\n🕒 {agora}"  # Adiciona horário para evitar mensagens idênticas
+    """Envia uma mensagem para o Telegram"""
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": mensagem}
     requests.post(url, json=payload)
 
 def obter_cotacao():
+    """Obtém a cotação atual do Euro em relação ao Real"""
     url = "https://economia.awesomeapi.com.br/json/last/EUR-BRL"
     resposta = requests.get(url).json()
-    print(f"📊 Cotação obtida: {resposta}")  # Depuração
-    return float(resposta["EURBRL"]["bid"])
+    return round(float(resposta["EURBRL"]["bid"]), 2)  # Arredonda para 2 casas decimais
 
-ultimo_valor = obter_cotacao()
-enviar_mensagem(f"📢 Monitoramento iniciado. Cotação atual: R$ {ultimo_valor:.2f}")
+# Tenta ler o último valor salvo
+if os.path.exists(COTACAO_FILE):
+    with open(COTACAO_FILE, "r") as f:
+        try:
+            ultimo_valor = float(f.read().strip())
+        except ValueError:
+            ultimo_valor = None
+else:
+    ultimo_valor = None
 
-while True:
-    cotacao = obter_cotacao()
-    
-    if cotacao != ultimo_valor:  # Qualquer mudança, notifica
-        if cotacao > ultimo_valor:
-            enviar_mensagem(f"🔺 Euro subiu para R$ {cotacao:.2f}")
-        else:
-            enviar_mensagem(f"🔻 Euro caiu para R$ {cotacao:.2f}")
+# Obtém a nova cotação
+cotacao = obter_cotacao()
 
-        ultimo_valor = cotacao  # Atualiza o último valor
-    
-    time.sleep(1800)  # Espera 30 minutos antes de verificar de novo
+if ultimo_valor is not None:
+    if cotacao > ultimo_valor:
+        enviar_mensagem(f"🔺 Euro subiu para R$ {cotacao:.2f}")
+    elif cotacao < ultimo_valor:
+        enviar_mensagem(f"🔻 Euro caiu para R$ {cotacao:.2f}")
+    else:
+        enviar_mensagem(f"🔹 Euro está estável em R$ {cotacao:.2f}")
+
+# Salva a nova cotação no arquivo
+with open(COTACAO_FILE, "w") as f:
+    f.write(str(cotacao))
