@@ -25,7 +25,7 @@ jobs:
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python EuroValue/EuroValue.py
+        run: python EuroValue.py
 
       - name: Cache da última cotação
         uses: actions/cache@v4
