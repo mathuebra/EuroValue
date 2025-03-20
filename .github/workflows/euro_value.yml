@@ -41,9 +41,9 @@ jobs:
             exit 0
           fi
 
-      - name: Commit e Push (Forçar se necessário)
+      - name: Commit e Push
         run: |
           git add VALUE.txt
           git commit -m "Atualização do valor do Euro" || echo "Nenhuma alteração para commit"
-          git push || echo "Nenhuma alteração para push"
+          git push origin master || echo "Nenhuma alteração para push"
   
