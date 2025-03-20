@@ -41,3 +41,5 @@ else:
 # Salva a nova cotação no cache
 with open(cache_path, "w") as f:
     f.write(str(cotacao))
+    
+    
